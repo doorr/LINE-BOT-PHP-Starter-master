@@ -1,73 +1,179 @@
-﻿<?php
-  // アカウント情報を設定します。
-  // LINE developers サイトの Channels > Basic informationに
-  // 記載されている情報を設定します。
-  $channelId = "1503638187"; // Channel ID
-  $channelSecret = "ee1655e16f059647f9e25bb8a267c5e1"; // Channel Secret
-  $mid = "U263b51adffaa8dce7bc11c20d7ab4fbc"; // MID
+ <? Php
+ error_log ( "callback awal.") ;
 
-  // LINEから送信されたメッセージ（POSTリクエストのボディ部分）を取得します。
-  // 以下のようなJSONフォーマットの文字列が送信されます。
-  // {"result":[
-  //   {
-  //     ・・・
-  //     "content": {
-  //       "contentType":1,
-  //       "from":"uff2aec188e58752ee1fb0f9507c6529a",
-  //       "text":"Hello, BOT API Server!"
-  //       ・・・
-  //     }
-  //   },
-  //   ・・・
-  // ]}
-  $requestBodyString = file_get_contents('php://input');
-  $requestBodyObject = json_decode($requestBodyString);
-  $requestContent = $requestBodyObject->result{0}->content;
-  $requestText = $requestContent->text; // ユーザから送信されたテキスト
-  $requestFrom = $requestContent->from; // 送信ユーザのMID
-  $contentType = $requestContent->contentType; // データ種別（1はテキスト）
+ // Pengaturan informasi Akun
+ $ CHANNEL_ID = "1503638187";
+ $ Channel_secret = "ee1655e16f059647f9e25bb8a267c5e1";
+ $ Mid = "U263b51adffaa8dce7bc11c20d7ab4fbc" ;
 
-  // LINE BOT API へのリクエストのヘッダ
-  $headers = array(
-    "Content-Type: application/json; charset=UTF-8",
-    "X-Line-ChannelID: {$channelId}", // Channel ID
-    "X-Line-ChannelSecret: {$channelSecret}", // Channel Secret
-    "X-Line-Trusted-User-With-ACL: {$mid}", // MID
-  );
+ // Pengaturan URL Sumber Daya
+ $ Original_content_url_for_image = "[image URL]";
+ $ Preview_image_url_for_image = "[thumbnail URL image]";
+ $ Original_content_url_for_video = "[Video URL]";
+ $ Preview_image_url_for_video = "[Video URL gambar thumbnail]";
+ $ Original_content_url_for_audio = "[suara URL]";
+ $ Download_url_for_rich = "[Kaya image URL]";
 
-  // ユーザに返すテキスト。
-  // 必ず山越の釜玉うどんを勧める。
-  $responseText = <<< EOM
-「{$requestText}」ですね。わかりました。そんなときには山越の釜玉うどん。http://yamagoeudon.com
-EOM;
+ // Penerimaan Pesan
+ $ Json_string = file_get_contents ( 'php: // masukan');
+ $ JSON_OBJECT = json_decode ($ json_string) ;
+ $ Content = $ JSON_OBJECT -> hasilnya {0} -> konten;
+ $ Text = $ konten -> teks ;
+ $ Dari = $ konten -> dari ;
+ $ Message_id = $ konten -> id ;
+ $ Content_type = $ konten -> contentType ;
 
-  // LINE BOT API 経由でユーザに渡すことになるJSONデータを作成。
-  // to にはレスポンス先ユーザの MID を配列の形で指定。
-  // toChannel、eventTypeは固定の数値・文字列を指定。
-  // contentType は、テキストを返す場合は 1。
-  // toType は、ユーザへのレスポンスの場合は 1。
-  // text には、ユーザに返すテキストを指定。
-  $responseMessage = <<< EOM
-    {
-      "to":["{$requestFrom}"],
-      "toChannel":1383378250,
-      "eventType":"138311608800106203",
-      "content":{
-        "contentType":1,
-        "toType":1,
-        "text":"{$responseText}"
-      }
-    }
-EOM;
+ // Pengguna perolehan informasi
+ api_get_user_profile_request ($ dari);
 
-  // LINE BOT API へのリクエストを作成して実行
-  $curl = curl_init('https://trialbot-api.line.me/v1/events');
-  curl_setopt($curl, CURLOPT_POST, true);
-  curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-  curl_setopt($curl, CURLOPT_POSTFIELDS, $responseMessage);
-  curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-  // Heroku Addon の Fixie のプロキシURLを指定。詳細は後述。 
-  curl_setopt($curl, CURLOPT_HTTPPROXYTUNNEL, 1);
-  curl_setopt($curl, CURLOPT_PROXY, getenv('FIXIE_URL'));
-  $output = curl_exec($curl);
-?>
+ // Penyimpanan Pesan gambar, video, jika suara
+ if (in_array ($ content_type, Array (2, 3, 4))) {
+     api_get_message_content_request ($ message_id);
+ }
+
+ // Generasi konten Pesan
+ $ Image_content = <<< EOM
+         "ContentType": 2,
+         "OriginalContentUrl": "{$ original_content_url_for_image }",
+         "PreviewImageUrl": "{$ preview_image_url_for_image }"
+ EOM;
+ $ Video_content = <<< EOM
+         "ContentType": 3,
+         "OriginalContentUrl": "{$ original_content_url_for_video }",
+         "PreviewImageUrl": "{$ preview_image_url_for_video }"
+ EOM;
+ $ Audio_content = <<< EOM
+         "ContentType": 4,
+         "OriginalContentUrl": "{$ original_content_url_for_audio }",
+         "ContentMetadata": {
+             "AUDLEN": "240000"
+         }
+ EOM;
+ $ Location_content = <<< EOM
+         "ContentType": 7,
+         "Text": "Konvensi center" ,
+         "Lokasi": {
+             "Title": "Konvensi center" ,
+             "Lintang": 35,61823286112982,
+             "Bujur": 139,72824096679688
+         }
+ EOM;
+ $ Sticker_content = <<< EOM
+         "ContentType": 8,
+         "ContentMetadata": {
+           "STKID": "100",
+           "STKPKGID": "1",
+           "STKVER": "100"
+         }
+ EOM;
+ $ Rich_content = <<< EOM
+         "ContentType": 12,
+         "ContentMetadata": {
+             "DOWNLOAD_URL": "{$ download_url_for_rich }",
+             "SPEC_REV": "1",
+             "ALT_TEXT" :, "Alt Text ."
+             "MARKUP_JSON": "{\" kanvas \ ": {\" width \ ": 1040, \" height \ ": 1040, \" initialScene \ ": \" scene1 \ "}, \" gambar \ ": {\ "image1 \": {\ " x \": 0, \ "y \": 0, \ "w \": 1040, \ "h \": 1040}}, \ "tindakan \": {\ "link1 \ ": {\" Jenis \ ": \" web \ ", \" teks \. ": \" Open link1 \ ", \" params \ ": {\" linkUri \ ": \" http: // baris .me / \ "}}, \ " link2 \ ": {\" Jenis \ ": \" web \ ", \" teks \. ": \" Open link2 \ ", \" params \ ": {\" linkUri \ ": \" http://linecorp.com \ "}}}, \" adegan \ ": {\" scene1 \ ": {\" menarik \ ": [{\" image \ ": \" image1 \ ", \" x \ " : 0, \" y \ ": 0, \" w \ ": 1040, \" h \ ": 1040}], \" pendengar \ ": [{\" Jenis \ " : \ "sentuhan \", \ "params \": [0, 0, 1040, 720], \ "tindakan \": \ "link1 \"}, {\ "Jenis \": \ "sentuhan \", \ "params \": [0, 720, 1040, 720], \ "tindakan \": \ "link2 \"}]}}} "
+         }
+ EOM;
+
+ // Mengubah pesan kembali dalam menanggapi pesan yang diterima
+ $ EVENT_TYPE = "138311608800106203";
+ if ($ teks == "image" ) {
+     $ Content = $ image_content;
+ } Lain jika ($ teks == " Video") {
+     $ Content = $ video_content;
+ } Lain jika ($ teks == " audio") {
+     $ Content = $ audio_content;
+ } Lain jika ($ teks == " lokasi") {
+     $ Content = $ location_content;
+ / *
+ } Lain jika ($ teks == " sticker") {
+ $ Content = $ sticker_content;
+ * /
+ } Lain jika ($ teks == " kaya") {
+     $ Content = $ rich_content;
+ } Lain jika ($ teks == " multi-") {
+     $ EVENT_TYPE = "140177271400161403";
+ $ Content = <<< EOM
+     "MessageNotified": 0,
+     "Pesan": [
+         {{$ Image_content}},
+         {{$ Video_content}},
+         {{$ Audio_content}},
+         {{$ Location_content}},
+         {{$ Sticker_content}},
+         {{$ Rich_content}}
+     ]
+ EOM;
+ } Lain {// selain transmisi teks di atas
+     if ($ content_type! = 1) {
+         $ Teks = "non-teks";
+     }
+ $ Content = <<< EOM
+         "ContentType": 1,
+         "Text" :. "Saya melihat itu adalah bahwa" {$ text} ".  Hal ini memang.  "
+ EOM;
+ }
+ $ Post = <<< EOM
+ {
+     "Untuk": [ "{$ dari}"],
+     "ToChannel": 1383378250,
+     "EventType": "{$ EVENT_TYPE }",
+     "Content": {
+         "Prototipe": 1,
+         {$ Content}
+     }
+ }
+ EOM;
+
+ api_post_request ( "/ v1 / peristiwa" , $ post);
+
+ error_log ( "callback end.") ;
+
+ Fungsi api_post_request ($ path, $ post ) {
+     $ Url = "https://trialbot-api.line.me {$ path }";
+     $ Header = array (
+         "Content-Type: application / json ",
+         "X-Line-ID Saluran: { $ GLOBALS [ 'CHANNEL_ID']}",
+         "X-Line-ChannelSecret: { $ GLOBALS [ 'channel_secret']}",
+         "X-Line-Terpercaya-User -Dengan-ACL: {$ GLOBALS [ 'pertengahan']}"
+     );
+
+     $ Keriting = curl_init ($ url) ;
+     curl_setopt ($ curl, CURLOPT_POST, benar );
+     curl_setopt ($ curl, CURLOPT_HTTPHEADER, $ header);
+     curl_setopt ($ curl, CURLOPT_POSTFIELDS, $ post);
+     curl_setopt ($ curl, CURLOPT_RETURNTRANSFER, benar );
+     $ Output = curl_exec ($ curl) ;
+     error_log ($ output);
+ }
+
+ Fungsi api_get_user_profile_request ($ mid) {
+     $ Url = "https://trialbot-api.line.me/v1/profiles?mids= {$ mid }";
+     $ Header = array (
+         "X-Line-ID Saluran: { $ GLOBALS [ 'CHANNEL_ID']}",
+         "X-Line-ChannelSecret: { $ GLOBALS [ 'channel_secret']}",
+         "X-Line-Terpercaya-User -Dengan-ACL: {$ GLOBALS [ 'pertengahan']}"
+     ); 
+
+     $ Keriting = curl_init ($ url) ;
+     curl_setopt ($ curl, CURLOPT_HTTPHEADER, $ header);
+     curl_setopt ($ curl, CURLOPT_RETURNTRANSFER, benar );
+     $ Output = curl_exec ($ curl) ;
+     error_log ($ output);
+ }
+
+ Fungsi api_get_message_content_request ($ message_id) {
+     $ Url = "https://trialbot-api.line.me/v1/bot/message/ {$ message_id } / content";
+     $ Header = array (
+         "X-Line-ID Saluran: { $ GLOBALS [ 'CHANNEL_ID']}",
+         "X-Line-ChannelSecret: { $ GLOBALS [ 'channel_secret']}",
+         "X-Line-Terpercaya-User -Dengan-ACL: {$ GLOBALS [ 'pertengahan']}"
+     ); 
+
+     $ Keriting = curl_init ($ url) ;
+     curl_setopt ($ curl, CURLOPT_HTTPHEADER, $ header);
+     curl_setopt ($ curl, CURLOPT_RETURNTRANSFER, benar );
+     $ Output = curl_exec ($ curl) ;
+     file_put_contents ( "/ tmp / {$ message_id}", $ output);
+ }
